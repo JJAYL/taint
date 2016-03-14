@@ -20,38 +20,39 @@ end
 
 local x = {value = 5}
 local numbers_metatable = {
-    __add = function(lhs, rhs) --add event handler
-            --make sure to get the same value because i don't know how to cast
+    __add = function(lhs, rhs) 
             local taint_table = {}
             local lhs_table = {}
             local rhs_table = {}
-            --setmetatable(taint_table, numbers_metatable) --is this legal?
             if type(lhs) == 'number' then
                 lhs_table['val'] = lhs
                 lhs_table['tainted'] = false
             else --it is a table
                 lhs_table = lhs
+                if lhs['tainted'] then
+                    taint_table = lhs --done to preserve the metatable
+                end
             end 
             if type(rhs) == 'number' then
                 rhs_table['val'] = rhs
                 rhs_table['tainted'] = false
-            else --it is a table
+            else 
                 rhs_table = rhs
+                if rhs['tainted'] ~= nil then
+                    taint_table = rhs
+                end
              end
-                --if they are one is tainted
-            if  istainted(lhs) or istainted(rhs) then 
+            if  istainted(lhs) or istainted(rhs) then  
                 taint_table['val'] = lhs_table['val'] + rhs_table['val']
                 taint_table['tainted'] = true
-                setmetatable(taint_table, numbers_metatable)
-                return taint_table --was return rhs_table['val'] + lhs_table['val']
+                return taint_table 
             else
                 taint_table['val'] = lhs_table['val'] + rhs_table['val']
                 taint_table['tainted'] = false
-                setmetatable(taint_table, numbers_metatable)
                 return taint_table
             end
     end,
-    __sub = function(lhs, rhs) --add event handler
+    __sub = function(lhs, rhs) 
             --make checks for tainted values and such
             --if they are both tainted or not tainted
             if  istainted(lhs) == istainted(rhs) then 
@@ -77,8 +78,11 @@ local numbers_metatable = {
     __tostring = function(t)
         --local sum = 0
         --for _, v in pairs(t) do sum = sum + v end
-        setmetatable(t, numbers_metatable)
+        --setmetatable(t, numbers_metatable)
         return tostring(t['val'])
+    end,
+    __index = function (tbl, key)
+        return tbl['val']
     end
 }
 
@@ -116,20 +120,14 @@ something_else = {}
 something_else['val'] = 321
 something_else = taint(something_else) --doing taint(something_else) by itself will not taint something_else
 
-print("something = ", something) 
---something['tainted'] = false
-
-setmetatable(something, numbers_metatable)
+print("getmetatable(something)", getmetatable(something))
+print("something = ", something)
+print("getmetatable(something)", getmetatable(something))
 print("something + 123 = ", something + 123)
 print("something", something)
-
-
-setmetatable(something, numbers_metatable)
 something = 123 + something
 print("something = 123 + something",  something)
---something = something + 123
+something = something + 123
 print("something = something + 123",  something)
-
-setmetatable(something, numbers_metatable)
 print("123 + something = ", 123 + something)
 print(something)
