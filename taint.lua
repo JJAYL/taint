@@ -19,7 +19,7 @@ function add_event(op1, op2)
 end
 
 local x = {value = 5}
-local numbers_metatable = {
+local taint_metatable = {
     __add = function(lhs, rhs) 
             local taint_table = {}
             local lhs_table = {}
@@ -29,7 +29,7 @@ local numbers_metatable = {
                 lhs_table['tainted'] = false
             else --it is a table
                 lhs_table = lhs
-                if lhs['tainted'] then
+                if lhs['tainted'] then --and getmetatable() = numbers_metatable
                     taint_table = lhs --done to preserve the metatable
                 end
             end 
@@ -53,14 +53,306 @@ local numbers_metatable = {
             end
     end,
     __sub = function(lhs, rhs) 
-            --make checks for tainted values and such
-            --if they are both tainted or not tainted
-            if  istainted(lhs) == istainted(rhs) then 
-                return lhs['val'] - rhs['val']
+            local taint_table = {}
+            local lhs_table = {}
+            local rhs_table = {}
+            if type(lhs) == 'number' then
+                lhs_table['val'] = lhs
+                lhs_table['tainted'] = false
+            else --it is a table
+                lhs_table = lhs
+                if lhs['tainted'] then
+                    taint_table = lhs --done to preserve the metatable
+                end
+            end 
+            if type(rhs) == 'number' then
+                rhs_table['val'] = rhs
+                rhs_table['tainted'] = false
+            else 
+                rhs_table = rhs
+                if rhs['tainted'] ~= nil then
+                    taint_table = rhs
+                end
+             end
+            if  istainted(lhs) or istainted(rhs) then  
+                taint_table['val'] = lhs_table['val'] - rhs_table['val']
+                taint_table['tainted'] = true
+                return taint_table 
+            else
+                taint_table['val'] = lhs_table['val'] - rhs_table['val']
+                taint_table['tainted'] = false
+                return taint_table
+        end
+    end,
+    __mul = function(lhs, rhs) 
+            local taint_table = {}
+            local lhs_table = {}
+            local rhs_table = {}
+            if type(lhs) == 'number' then
+                lhs_table['val'] = lhs
+                lhs_table['tainted'] = false
+            else --it is a table
+                lhs_table = lhs
+                if lhs['tainted'] then
+                    taint_table = lhs --done to preserve the metatable
+                end
+            end 
+            if type(rhs) == 'number' then
+                rhs_table['val'] = rhs
+                rhs_table['tainted'] = false
+            else 
+                rhs_table = rhs
+                if rhs['tainted'] ~= nil then
+                    taint_table = rhs
+                end
+             end
+            if  istainted(lhs) or istainted(rhs) then  
+                taint_table['val'] = lhs_table['val'] * rhs_table['val']
+                taint_table['tainted'] = true
+                return taint_table 
+            else
+                taint_table['val'] = lhs_table['val'] * rhs_table['val']
+                taint_table['tainted'] = false
+                return taint_table
+        end
+    end,
+    __div = function(lhs, rhs) 
+            local taint_table = {}
+            local lhs_table = {}
+            local rhs_table = {}
+            if type(lhs) == 'number' then
+                lhs_table['val'] = lhs
+                lhs_table['tainted'] = false
+            else --it is a table
+                lhs_table = lhs
+                if lhs['tainted'] then
+                    taint_table = lhs --done to preserve the metatable
+                end
+            end 
+            if type(rhs) == 'number' then
+                rhs_table['val'] = rhs
+                rhs_table['tainted'] = false
+            else 
+                rhs_table = rhs
+                if rhs['tainted'] ~= nil then
+                    taint_table = rhs
+                end
+             end
+            if  istainted(lhs) or istainted(rhs) then  
+                taint_table['val'] = lhs_table['val'] / rhs_table['val']
+                taint_table['tainted'] = true
+                return taint_table 
+            else
+                taint_table['val'] = lhs_table['val'] / rhs_table['val']
+                taint_table['tainted'] = false
+                return taint_table
+        end
+    end,
+
+
+    __mod = function(lhs, rhs) 
+            local taint_table = {}
+            local lhs_table = {}
+            local rhs_table = {}
+            if type(lhs) == 'number' then
+                lhs_table['val'] = lhs
+                lhs_table['tainted'] = false
+            else --it is a table
+                lhs_table = lhs
+                if lhs['tainted'] then
+                    taint_table = lhs --done to preserve the metatable
+                end
+            end 
+            if type(rhs) == 'number' then
+                rhs_table['val'] = rhs
+                rhs_table['tainted'] = false
+            else 
+                rhs_table = rhs
+                if rhs['tainted'] ~= nil then
+                    taint_table = rhs
+                end
+             end
+            if  istainted(lhs) or istainted(rhs) then  
+                taint_table['val'] = lhs_table['val'] - math.floor(lhs_table['val']/rhs_table['val'])*rhs_table['val']
+                taint_table['tainted'] = true
+                return taint_table 
+            else
+                taint_table['val'] =  lhs_table['val'] - math.floor(lhs_table['val']/rhs_table['val'])*rhs_table['val']    --because the % gives me an error 
+                taint_table['tainted'] = false
+                return taint_table
+        end
+    end,
+
+    __pow = function(lhs, rhs) 
+            local taint_table = {}
+            local lhs_table = {}
+            local rhs_table = {}
+            if type(lhs) == 'number' then
+                lhs_table['val'] = lhs
+                lhs_table['tainted'] = false
+            else --it is a table
+                lhs_table = lhs
+                if lhs['tainted'] then
+                    taint_table = lhs --done to preserve the metatable
+                end
+            end 
+            if type(rhs) == 'number' then
+                rhs_table['val'] = rhs
+                rhs_table['tainted'] = false
+            else 
+                rhs_table = rhs
+                if rhs['tainted'] ~= nil then
+                    taint_table = rhs
+                end
+             end
+            if  istainted(lhs) or istainted(rhs) then  
+                taint_table['val'] = lhs_table['val'] ^ rhs_table['val']
+                taint_table['tainted'] = true
+                return taint_table 
+            else
+                taint_table['val'] = lhs_table['val'] ^ rhs_table['val']
+                taint_table['tainted'] = false
+                return taint_table
+        end
+    end,
+
+
+
+    __concat = function(lhs, rhs) 
+            local taint_table = {}
+            local lhs_table = {}
+            local rhs_table = {}
+            if type(lhs) == 'number' then
+                lhs_table['val'] = lhs
+                lhs_table['tainted'] = false
+            else --it is a table
+                lhs_table = lhs
+                if lhs['tainted'] then
+                    taint_table = lhs --done to preserve the metatable
+                end
+            end 
+            if type(rhs) == 'number' then
+                rhs_table['val'] = rhs
+                rhs_table['tainted'] = false
+            else 
+                rhs_table = rhs
+                if rhs['tainted'] ~= nil then
+                    taint_table = rhs
+                end
+             end
+            if  istainted(lhs) or istainted(rhs) then  
+                taint_table['val'] = lhs_table['val'] .. rhs_table['val']
+                taint_table['tainted'] = true
+                return taint_table 
+            else
+                taint_table['val'] = lhs_table['val'] .. rhs_table['val']
+                taint_table['tainted'] = false
+                return taint_table
+        end
+    end,
+
+
+
+    __eq = function(lhs, rhs) 
+            local taint_table = {}
+            local lhs_table = {}
+            local rhs_table = {}
+            if type(lhs) == 'number' then
+                lhs_table['val'] = lhs
+                lhs_table['tainted'] = false
+            else --it is a table
+                lhs_table = lhs
+                if lhs['tainted'] then --and getmetatable() = numbers_metatable
+                    taint_table = lhs --done to preserve the metatable
+                end
+            end 
+            if type(rhs) == 'number' then
+                rhs_table['val'] = rhs
+                rhs_table['tainted'] = false
+            else 
+                rhs_table = rhs
+                if rhs['tainted'] ~= nil then
+                    taint_table = rhs
+                end
+             end
+            if  istainted(lhs) or istainted(rhs) then  
+                taint_table['val'] = lhs_table['val'] == rhs_table['val']
+                taint_table['tainted'] = true
+                return taint_table 
+            else
+                taint_table['val'] = lhs_table['val'] == rhs_table['val']
+                taint_table['tainted'] = false
+                return taint_table
             end
     end,
+    __lt = function(lhs, rhs) 
+            local taint_table = {}
+            local lhs_table = {}
+            local rhs_table = {}
+            if type(lhs) == 'number' then
+                lhs_table['val'] = lhs
+                lhs_table['tainted'] = false
+            else --it is a table
+                lhs_table = lhs
+                if lhs['tainted'] then --and getmetatable() = numbers_metatable
+                    taint_table = lhs --done to preserve the metatable
+                end
+            end 
+            if type(rhs) == 'number' then
+                rhs_table['val'] = rhs
+                rhs_table['tainted'] = false
+            else 
+                rhs_table = rhs
+                if rhs['tainted'] ~= nil then
+                    taint_table = rhs
+                end
+             end
+            if  istainted(lhs) or istainted(rhs) then  
+                taint_table['val'] = lhs_table['val'] < rhs_table['val']
+                taint_table['tainted'] = true
+                return taint_table 
+            else
+                taint_table['val'] = lhs_table['val'] < rhs_table['val']
+                taint_table['tainted'] = false
+                return taint_table
+            end
+    end,
+    __le = function(lhs, rhs) 
+            local taint_table = {}
+            local lhs_table = {}
+            local rhs_table = {}
+            if type(lhs) == 'number' then
+                lhs_table['val'] = lhs
+                lhs_table['tainted'] = false
+            else --it is a table
+                lhs_table = lhs
+                if lhs['tainted'] then --and getmetatable() = numbers_metatable
+                    taint_table = lhs --done to preserve the metatable
+                end
+            end 
+            if type(rhs) == 'number' then
+                rhs_table['val'] = rhs
+                rhs_table['tainted'] = false
+            else 
+                rhs_table = rhs
+                if rhs['tainted'] ~= nil then
+                    taint_table = rhs
+                end
+             end
+            if  istainted(lhs) or istainted(rhs) then  
+                taint_table['val'] = lhs_table['val'] <= rhs_table['val']
+                taint_table['tainted'] = true
+                return taint_table 
+            else
+                taint_table['val'] = lhs_table['val'] <= rhs_table['val']
+                taint_table['tainted'] = false
+                return taint_table
+            end
+    end,
+
+--[[
     __eq = function (lhs, rhs)
-        if istainted(lhs) == istainted(rhs) then
+        if istainted(lhs) or  istainted(rhs) then --TODO make a boolean taint metatable to return
             return lhs.value == rhs.value
         end
     end,
@@ -73,8 +365,8 @@ local numbers_metatable = {
         if istainted(lhs) == istainted(rhs) then
             return lhs.value <= rhs.value
         end
-        --TODO make sure assign works
     end,
+    ]]--
     __tostring = function(t)
         --local sum = 0
         --for _, v in pairs(t) do sum = sum + v end
@@ -89,13 +381,13 @@ local numbers_metatable = {
 
 -- taint analysis stuff
 function taint(value)
-    if type(value) == 'table' and value['tainted'] ~= nill then --probably need a hook instead
-        setmetatable(value, numbers_metatable) --TODO check to see if it is numbers, string, boolean etc
+    if type(value) == 'table' and value['tainted'] ~= nill then --probably should check against the metatable instead
+        setmetatable(value, taint_metatable) --TODO check to see if it is numbers, string, boolean etc
         value['tainted'] = true --need the address of of value to be changed?
         return value
     end
     local taint_table = {}
-    setmetatable(taint_table, numbers_metatable)
+    setmetatable(taint_table, taint_metatable)
     taint_table['val'] = value --val and tainted should be some constants 
     taint_table['tainted'] = true 
     return taint_table
@@ -116,18 +408,45 @@ function istainted(value)
 end
 
 something = taint(123)
-something_else = {}
-something_else['val'] = 321
-something_else = taint(something_else) --doing taint(something_else) by itself will not taint something_else
+somethingtrue = taint(true)
+somethingfalse = taint(false)
+--print("true + true = ", true + true)
+--print("true + false = ", true + false)
+print("true and true = ", somethingtrue and somethingtrue)
+print("true or true = ", somethingtrue or somethingtrue)
+print("true and false = ", somethingtrue and somethingfalse)
+print("true or false = ", somethingtrue or somethingfalse)
+print("false or false", somethingfalse or somethingfalse)
+print("false and false", somethingfalse and somethingfalse)
 
-print("getmetatable(something)", getmetatable(something))
+
+----[[
 print("something = ", something)
-print("getmetatable(something)", getmetatable(something))
-print("something + 123 = ", something + 123)
+--print("getmetatable(something)", getmetatable(something))
+
+print("something - 1 = ", something - 1)
 print("something", something)
-something = 123 + something
-print("something = 123 + something",  something)
+print("istainted(something)", istainted(something))
+something = 200 - something
+print("something = 200 - something",  something)
+
 something = something + 123
 print("something = something + 123",  something)
+
 print("123 + something = ", 123 + something)
 print(something)
+print("something - 123 = ", something - 123)
+print("something = ", something)
+something = 492 - something
+print("492 - something = ", something)
+print("something * 2 = ", something * 2)
+print(istainted(something))
+
+print("something / 2 = ", something / 2)
+print("something ^ 2 = ", something ^ 2)
+print("something .. 2(concat) = ", something .. 2)
+
+print(something == something)
+print(something < something)
+print(something < 1)
+----]]
